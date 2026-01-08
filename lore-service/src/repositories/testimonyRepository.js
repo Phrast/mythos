@@ -30,4 +30,8 @@ const updateStatus = async (id, status, validatedBy) => {
   );
 };
 
-module.exports = { findById, findByCreatureId, findRecentByAuthorAndCreature, create, updateStatus };
+const countValidatedByCreatureId = async (creatureId) => {
+  return await Testimony.countDocuments({ creatureId, status: 'VALIDATED' });
+};
+
+module.exports = { findById, findByCreatureId, findRecentByAuthorAndCreature, create, updateStatus, countValidatedByCreatureId };

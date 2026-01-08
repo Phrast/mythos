@@ -32,7 +32,8 @@ const getCreature = async (req, res) => {
 
 const getAllCreatures = async (req, res) => {
   try {
-    const creatures = await creatureService.getAllCreatures();
+    const { sortBy } = req.query;
+    const creatures = await creatureService.getAllCreatures(sortBy);
     res.json(creatures);
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
