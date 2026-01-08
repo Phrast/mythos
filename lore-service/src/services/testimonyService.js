@@ -1,5 +1,18 @@
 const testimonyRepository = require('../repositories/testimonyRepository');
 const creatureRepository = require('../repositories/creatureRepository');
+const axios = require('axios');
+
+const updateUserReputation = async (userId, delta, authToken) => {
+  try {
+    await axios.patch(
+      `${process.env.AUTH_SERVICE_URL}/users/${userId}/reputation`,
+      { delta },
+      { headers: { Authorization: authToken } }
+    );
+  } catch (error) {
+    console.error('Failed to update reputation:', error.message);
+  }
+};
 
 const createTestimony = async (authorId, creatureId, description) => {
   // Règle : description obligatoire
@@ -26,7 +39,7 @@ const getTestimoniesByCreature = async (creatureId) => {
   return await testimonyRepository.findByCreatureId(creatureId);
 };
 
-const validateTestimony = async (testimonyId, validatorId) => {
+const validateTestimony = async (testimonyId, validatorId, validatorRole, authToken) => {
   const testimony = await testimonyRepository.findById(testimonyId);
   if (!testimony) {
     throw new Error('Testimony not found');
@@ -37,10 +50,19 @@ const validateTestimony = async (testimonyId, validatorId) => {
     throw new Error('Cannot validate your own testimony');
   }
 
-  return await testimonyRepository.updateStatus(testimonyId, 'VALIDATED', validatorId);
+  const result = await testimonyRepository.updateStatus(testimonyId, 'VALIDATED', validatorId);
+
+  // Réputation : +3 pour validation, +1 bonus si validateur EXPERT
+  let reputationDelta = 3;
+  if (validatorRole === 'EXPERT') {
+    reputationDelta += 1;
+  }
+  await updateUserReputation(testimony.authorId, reputationDelta, authToken);
+
+  return result;
 };
 
-const rejectTestimony = async (testimonyId, validatorId) => {
+const rejectTestimony = async (testimonyId, validatorId, authToken) => {
   const testimony = await testimonyRepository.findById(testimonyId);
   if (!testimony) {
     throw new Error('Testimony not found');
@@ -51,7 +73,12 @@ const rejectTestimony = async (testimonyId, validatorId) => {
     throw new Error('Cannot reject your own testimony');
   }
 
-  return await testimonyRepository.updateStatus(testimonyId, 'REJECTED', validatorId);
+  const result = await testimonyRepository.updateStatus(testimonyId, 'REJECTED', validatorId);
+
+  // Réputation : -1 pour rejet
+  await updateUserReputation(testimony.authorId, -1, authToken);
+
+  return result;
 };
 
 module.exports = { createTestimony, getTestimoniesByCreature, validateTestimony, rejectTestimony };

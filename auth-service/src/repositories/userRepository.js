@@ -40,10 +40,22 @@ const updateRole = async (id, role) => {
   });
 };
 
+const updateReputation = async (id, reputationDelta) => {
+  return await prisma.user.update({
+    where: { id },
+    data: {
+      reputation: {
+        increment: reputationDelta
+      }
+    }
+  });
+};
+
 module.exports = {
   findByEmail,
   findById,
   findAll,
   create,
-  updateRole
+  updateRole,
+  updateReputation
 };

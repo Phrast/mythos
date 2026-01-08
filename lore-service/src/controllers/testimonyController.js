@@ -35,7 +35,13 @@ const getTestimoniesByCreature = async (req, res) => {
 
 const validateTestimony = async (req, res) => {
   try {
-    const testimony = await testimonyService.validateTestimony(req.params.id, req.user.id);
+    const authToken = req.headers.authorization;
+    const testimony = await testimonyService.validateTestimony(
+      req.params.id,
+      req.user.id,
+      req.user.role,
+      authToken
+    );
     res.json(testimony);
   } catch (error) {
     if (error.message === 'Testimony not found') {
@@ -50,7 +56,12 @@ const validateTestimony = async (req, res) => {
 
 const rejectTestimony = async (req, res) => {
   try {
-    const testimony = await testimonyService.rejectTestimony(req.params.id, req.user.id);
+    const authToken = req.headers.authorization;
+    const testimony = await testimonyService.rejectTestimony(
+      req.params.id,
+      req.user.id,
+      authToken
+    );
     res.json(testimony);
   } catch (error) {
     if (error.message === 'Testimony not found') {
